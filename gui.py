@@ -1,4 +1,5 @@
 from tkinter import *
+import tkinter
 
 root = Tk()
 root.title("Snake")
@@ -8,15 +9,15 @@ frame.pack()
 
 
 
-def key_press(e):
+def key_press(e:tkinter.Event):
     key_pressed = str(e.char)
-    if key_pressed == 'w':
+    if key_pressed == 'w' or e.keysym=="Up":
         keyup(e)
-    elif key_pressed == 's':
+    elif key_pressed == 's' or e.keysym=="Down":
         keydown(e)
-    elif key_pressed == 'a':
+    elif key_pressed == 'a' or e.keysym=="Left":
         keyleft(e)
-    elif key_pressed == 'd':
+    elif key_pressed == 'd' or e.keysym=="Right":
         keyright(e)
 
 def keyup(e):
@@ -27,6 +28,7 @@ def keyleft(e):
     print("left")
 def keyright(e):
     print("right")
+
 
 root.bind("<Key>", key_press)
 root.mainloop()
