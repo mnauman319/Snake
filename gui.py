@@ -1,7 +1,12 @@
 from os import name
 from tkinter import *
 import tkinter
-
+direction = {
+    (-5,0): 'Left',
+    (5,0): 'Right',
+    (0,5): 'Down',
+    (0,-5): 'Up'
+}
 class GUI:
     def __init__ (self, x:int, y:int, root:tkinter):
         
@@ -22,18 +27,29 @@ class GUI:
 
     def grow_snake(self):
         return
-    def rotate_snake(self, plane, prev_dir):
+    def rotate_snake(self, new_dir, prev_dir):
         body_coords = self.my_canvas.coords(self.body)
         cur_x0 = body_coords[0]
         cur_y0 = body_coords[1]
         cur_x1 = body_coords[2]
         cur_y1 = body_coords[3]
-
-        width = abs(cur_x1 - cur_x0)
-        height = abs(cur_y1-cur_y1)
-        if plane == 'up':
-            if prev_dir == 'left':
+       
+        if new_dir == 'Up':
+            if prev_dir == 'Left':
                 body_coords = [cur_x0-5, cur_y0-5, cur_x0, cur_y1+5]
+                print(f'width before - {abs(cur_x1 - cur_x0)}')
+                print(f'height after - {abs(cur_y1-cur_y0)}')
+                self.my_canvas.coords(self.body,body_coords)
+                body_coords = self.my_canvas.coords(self.body)
+                cur_x0 = body_coords[0]
+                cur_y0 = body_coords[1]
+                cur_x1 = body_coords[2]
+                cur_y1 = body_coords[3]
+                print(f'width after - {abs(cur_x1 - cur_x0)}')
+                print(f'height after - {abs(cur_y1-cur_y0)}')
+        elif new_dir == 'Left':
+            if prev_dir == 'Up':
+                body_coords = [cur_x0+5, cur_y0, cur_x1, cur_y1-5]
                 self.my_canvas.coords(self.body,body_coords)
         #     elif prev_dir == 'right':
         # elif plane == 'horizontal':
@@ -51,24 +67,38 @@ class GUI:
 
     def keyup(self,e:Event):
         
-        prev_direction = 'left' if self.x == -5 else 'right'
+        prev_direction = direction[(self.x,self.y)]
+        if prev_direction == 'Down':
+            return
         self.x = 0
         self.y = -5
-        
-        self.rotate_snake('up', prev_direction)
+        self.rotate_snake('Up', prev_direction)
+
     def keydown(self,e:Event):
+        prev_direction = direction[(self.x,self.y)]
+        if prev_direction == 'Up': 
+            return
         self.x = 0
         self.y = 5
+        self.rotate_snake('Down', prev_direction)
     def keyleft(self,e:Event):
+        prev_direction = direction[(self.x,self.y)]
+        if prev_direction == 'Right': 
+            return
         self.x = -5
         self.y = 0
+        self.rotate_snake('Left', prev_direction)
     def keyright(self,e:Event):
+        prev_direction = direction[(self.x,self.y)]
+        if prev_direction == 'Left': 
+            return
         self.x = 5
         self.y = 0
-
+        self.rotate_snake('Right', prev_direction)
     def start(self):
         self.root.bind("<Key>", self.key_press)
         self.root.after(1000, self.move_snake)
         self.root.mainloop()
+
 my_GUI = GUI(5,0,Tk())
 my_GUI.start()
