@@ -36,21 +36,30 @@ class GUI:
        
         if new_dir == 'Up':
             if prev_dir == 'Left':
-                body_coords = [cur_x0-5, cur_y0-5, cur_x0, cur_y1+5]
-                print(f'width before - {abs(cur_x1 - cur_x0)}')
-                print(f'height after - {abs(cur_y1-cur_y0)}')
+                body_coords = [cur_x0-5, cur_y0-5, cur_x0, cur_y1]
+                # print(f'width before - {abs(cur_x1 - cur_x0)}')
+                # print(f'height after - {abs(cur_y1-cur_y0)}')
                 self.my_canvas.coords(self.body,body_coords)
                 body_coords = self.my_canvas.coords(self.body)
                 cur_x0 = body_coords[0]
                 cur_y0 = body_coords[1]
                 cur_x1 = body_coords[2]
                 cur_y1 = body_coords[3]
-                print(f'width after - {abs(cur_x1 - cur_x0)}')
-                print(f'height after - {abs(cur_y1-cur_y0)}')
+                # print(f'width after - {abs(cur_x1 - cur_x0)}')
+                # print(f'height after - {abs(cur_y1-cur_y0)}')
         elif new_dir == 'Left':
             if prev_dir == 'Up':
-                body_coords = [cur_x0+5, cur_y0, cur_x1, cur_y1-5]
+                print(f'width before - {abs(cur_x1 - cur_x0)}')
+                print(f'height after - {abs(cur_y1-cur_y0)}')
+                body_coords = [cur_x0+5, cur_y0-5, cur_x0-5, cur_y0]
+                body_coords = self.my_canvas.coords(self.body)
                 self.my_canvas.coords(self.body,body_coords)
+                cur_x0 = body_coords[0]
+                cur_y0 = body_coords[1]
+                cur_x1 = body_coords[2]
+                cur_y1 = body_coords[3]
+                print(f'width after - {abs(cur_x1 - cur_x0)}')
+                print(f'height after - {abs(cur_y1-cur_y0)}')
         #     elif prev_dir == 'right':
         # elif plane == 'horizontal':
         # return
