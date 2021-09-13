@@ -11,11 +11,15 @@
 from os import name
 from tkinter import *
 import tkinter
+
+segment_size = 5
+speed = 5
+movement_freq = 100
 direction = {
-    (-5,0): 'Left',
-    (5,0): 'Right',
-    (0,5): 'Down',
-    (0,-5): 'Up'
+    (-speed,0): 'Left',
+    (speed,0): 'Right',
+    (0,speed): 'Down',
+    (0,-speed): 'Up'
 }
 class GUI:
     def __init__ (self, s_move_x:int, s_move_y:int, root:tkinter):
@@ -27,7 +31,7 @@ class GUI:
         self.root.geometry('1000x800')
         self.my_canvas = Canvas(self.root,width=1000, height=800,  bg='black')
         self.my_canvas.pack()
-        self.body = self.my_canvas.create_rectangle(300,200,290,195, fill='white')
+        self.body = self.my_canvas.create_rectangle(300,200,300-2*segment_size,200-segment_size, fill='white')
 
     def end_game(self):
         print('game over')
@@ -37,7 +41,7 @@ class GUI:
         else:
             self.my_canvas.move(self.body, self.s_move_x, self.s_move_y)
             print(self.my_canvas.coords(self.body))
-            self.root.after(1000,self.move_snake)
+            self.root.after(movement_freq,self.move_snake)
 
     def grow_snake(self):
         return
@@ -49,32 +53,31 @@ class GUI:
         cur_y1 = body_coords[3]
         if new_dir == 'Up':
             if prev_dir == 'Left':
-                body_coords = [cur_x0+5, cur_y0-5, cur_x0+10, cur_y1]
+                body_coords = [cur_x0+segment_size, cur_y0-segment_size, cur_x0+2*segment_size, cur_y1]
                 self.my_canvas.coords(self.body,body_coords)
             elif prev_dir == 'Right':
-                body_coords = [cur_x0, cur_y0-5, cur_x0+5, cur_y1]
+                body_coords = [cur_x0, cur_y0-segment_size, cur_x0+segment_size, cur_y1]
                 self.my_canvas.coords(self.body,body_coords)
         elif new_dir == 'Down':
             if prev_dir == 'Left':
-                body_coords = [cur_x0+5, cur_y0, cur_x0+10, cur_y1+5]
+                body_coords = [cur_x0+segment_size, cur_y0, cur_x0+2*segment_size, cur_y1+segment_size]
                 self.my_canvas.coords(self.body,body_coords)
             elif prev_dir == 'Right':
-                body_coords = [cur_x0, cur_y0, cur_x0+5, cur_y1+5]
+                body_coords = [cur_x0, cur_y0, cur_x0+segment_size, cur_y1+segment_size]
                 self.my_canvas.coords(self.body,body_coords)
         elif new_dir == 'Left':
             if prev_dir == 'Up':
-                body_coords = [cur_x0+5, cur_y0+5, cur_x0-5, cur_y0+10]
+                body_coords = [cur_x0+segment_size, cur_y0+segment_size, cur_x0-segment_size, cur_y0+2*segment_size]
                 self.my_canvas.coords(self.body,body_coords)
             elif prev_dir == 'Down':
-                body_coords = [cur_x0+5, cur_y0+5, cur_x0-5, cur_y0+10]
+                body_coords = [cur_x0+segment_size, cur_y0, cur_x0-segment_size, cur_y0+segment_size]
                 self.my_canvas.coords(self.body,body_coords)
         elif new_dir == 'Right':
             if prev_dir == 'Up':
-                body_coords = [cur_x0, cur_y0, cur_x0+10, cur_y0+5]
+                body_coords = [cur_x0, cur_y0+segment_size, cur_x0+2*segment_size, cur_y0+2*segment_size]
                 self.my_canvas.coords(self.body,body_coords)
             elif prev_dir == 'Down':
-                print('here')
-                body_coords = [cur_x0, cur_y0, cur_x0+10, cur_y0+5]
+                body_coords = [cur_x0, cur_y0, cur_x0+2*segment_size, cur_y0+segment_size]
                 self.my_canvas.coords(self.body,body_coords)
 
     def key_press(self,e:tkinter.Event):
@@ -93,7 +96,7 @@ class GUI:
         if prev_direction == 'Down' or prev_direction == 'Up':
             return
         self.s_move_x = 0
-        self.s_move_y = -5
+        self.s_move_y = -speed
         self.rotate_snake('Up', prev_direction)
 
     def keydown(self,e:Event):
@@ -101,28 +104,28 @@ class GUI:
         if prev_direction == 'Up' or prev_direction == 'Down': 
             return
         self.s_move_x = 0
-        self.s_move_y = 5
+        self.s_move_y = speed
         self.rotate_snake('Down', prev_direction)
     def keyleft(self,e:Event):
         prev_direction = direction[(self.s_move_x,self.s_move_y)]
         if prev_direction == 'Right' or prev_direction == 'Left': 
             return
-        self.s_move_x = -5
+        self.s_move_x = -speed
         self.s_move_y = 0
         self.rotate_snake('Left', prev_direction)
     def keyright(self,e:Event):
         prev_direction = direction[(self.s_move_x,self.s_move_y)]
         if prev_direction == 'Left' or prev_direction == 'Right': 
             return
-        self.s_move_x = 5
+        self.s_move_x = speed
         self.s_move_y = 0
         self.rotate_snake('Right', prev_direction)
     def start(self):
         self.root.bind("<Key>", self.key_press)
-        self.root.after(1000, self.move_snake)
+        self.root.after(movement_freq, self.move_snake)
         self.root.mainloop()
 
-my_GUI = GUI(5,0,Tk())
+my_GUI = GUI(speed,0,Tk())
 my_GUI.start()
 
 
