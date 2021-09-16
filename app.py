@@ -12,11 +12,9 @@ from tkinter import *
 import tkinter
 from typing import List, Tuple
 from snake import *
-import time
-import threading
 segment_size = 5
 speed = 10
-movement_freq = 500
+movement_freq = 300
 direction = {
     (-speed,0): 'Left',
     (speed,0): 'Right',
@@ -35,10 +33,8 @@ def direction_from_movement(value:str):
     values = list(direction.values())
     return keys[values.index(value)]
 class GUI:
-    def __init__ (self, s_move_x:int, s_move_y:int, root:tkinter):
+    def __init__ (self, root:tkinter):
         
-        self.s_move_x = s_move_x
-        self.s_move_y = s_move_y
         self.root = root
         self.root.title("Snake")
         self.root.geometry('1000x800')
@@ -47,12 +43,21 @@ class GUI:
         self.head = Segment(speed,0, segment_size, self.my_canvas)
         self.body = List[Segment]
         self.body = [self.head]
+        # self.food = Canvas(self.my_canvas, width=100, height=100).pack()
+        self.recently_eaten = 0
 
     def end_game(self):
         print('game over')
+    def create_food(self):
+        print('created food')
     def move_snake(self):
         seg_being_rotated = 0
-        if(self.head.canvas.coords(self.head.seg)[0]+self.head.s_move_x==0 or self.head.canvas.coords(self.head.seg)[1]+self.head.s_move_y==0):
+        location = self.head.canvas.coords(self.head.seg)
+        touching_left = location[0]+self.head.s_move_x<=0
+        touching_right = location[0]+self.head.s_move_x>=1000
+        touching_top = location[1]+self.head.s_move_y<=0 
+        touching_bottom = location[1]+self.head.s_move_y>=800
+        if(touching_left or touching_right or touching_bottom or touching_top):
             self.end_game()
         else:
             for seg in self.body:
@@ -65,8 +70,10 @@ class GUI:
                         last_piece.rotating = False
                         if seg == self.body[len(self.body)-1]:
                             seg.rotating = False
+                        # print(f'seg = {seg.seg} is rotating = {seg.rotating}')
 
                 seg.canvas.move(seg.seg, seg.s_move_x, seg.s_move_y)
+                location = self.head.canvas.coords(self.head.seg)
                 cur_xy = direction_from_movement(seg.cur_dir)
                 seg.s_move_x = cur_xy[0]
                 seg.s_move_y = cur_xy[1]
@@ -147,7 +154,7 @@ class GUI:
         self.root.after(movement_freq, self.move_snake)
         self.root.mainloop()
 
-my_GUI = GUI(speed,0,Tk())
+my_GUI = GUI(Tk())
 a = my_GUI.grow_snake(my_GUI.head)
 b = my_GUI.grow_snake(a)
 my_GUI.grow_snake(b)

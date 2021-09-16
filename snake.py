@@ -8,6 +8,7 @@ class Segment:
         self.canvas = canvas
         self.rotating = False
         self.cur_dir = cur_dir
+        
         if prev_seg == [0]:
             self.seg = self.canvas.create_rectangle(300,200,300-2*segment_size,200-segment_size, fill='white')
         else:
