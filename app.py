@@ -14,9 +14,9 @@ from typing import List, Tuple
 from snake import *
 
 segment_size = 5
-food_size = 10
+food_size = 5
 speed = 10
-movement_freq = 300
+movement_freq = 200
 direction = {
     (-speed,0): 'Left',
     (speed,0): 'Right',
@@ -50,8 +50,6 @@ class GUI:
 
     def end_game(self):
         print('game over')
-    def create_food(self):
-        print('created food')
     def touching_border(self):
         location = self.head.canvas.coords(self.head.seg)
         touching_left = location[0]+self.head.s_move_x<=0
@@ -72,8 +70,7 @@ class GUI:
             s_min_max[0][1] = x1 if x1 > s_min_max[0][1] else s_min_max[0][1]
             s_min_max[1][0] = y0 if y0 < s_min_max[1][0] else s_min_max[1][0]
             s_min_max[1][1] = y1 if y1 > s_min_max[1][1] else s_min_max[1][1]
-        
-        print(s_min_max)
+
         # pick 
             #1 - NE
             #2 - NW
@@ -110,26 +107,24 @@ class GUI:
                 y = random.randint(s_min_max[1][1] + food_size, 800-2*food_size)
             f_loc = [x,y,x+food_size,y+food_size]
             self.my_canvas.coords(self.food,f_loc)
-        print(f'f_loc: {f_loc}')
         return
-
+    def same_pos(self, pos1:List[float], pos2:List[float]):
+        for i in range(4):
+            if pos1[i] != pos2[i]:
+                return False
+        return True
     def move_snake(self):
-        seg_being_rotated = 0
         
         if self.touching_border():
             self.end_game()
         else:
             for seg in self.body:
-                if seg != self.head:
-                    last_piece = self.body[self.body.index(seg)-1]
-                    if last_piece.rotating:
-                        seg_being_rotated = self.body[self.body.index(seg)]
-                        self.rotate_snake(last_piece.cur_dir,seg.cur_dir, seg)
-                        seg.cur_dir = last_piece.cur_dir
-                        last_piece.rotating = False
-                        if seg == self.body[len(self.body)-1]:
-                            seg.rotating = False
-                        # print(f'seg = {seg.seg} is rotating = {seg.rotating}')
+                cur_pos = seg.canvas.coords(seg.seg) 
+                if len(seg.rot_pos) > 0 and self.same_pos(cur_pos,seg.rot_pos[0]):
+                    self.rotate_snake(seg.rot_dir[0],seg.cur_dir, seg)
+                    seg.cur_dir = seg.rot_dir[0]
+                    seg.rot_pos.pop(0)
+                    seg.rot_dir.pop(0)
 
                 seg.canvas.move(seg.seg, seg.s_move_x, seg.s_move_y)
                 if seg == self.head:
@@ -142,13 +137,10 @@ class GUI:
                 seg.s_move_x = cur_xy[0]
                 seg.s_move_y = cur_xy[1]
             self.root.after(movement_freq,self.move_snake)
-            if seg_being_rotated != 0:
-                if self.body.index(seg_being_rotated) <= len(self.body)-1:
-                    seg_being_rotated.rotating = True
 
     def grow_snake(self,seg:Segment):
         last_piece = self.body[len(self.body)-1]
-        new_piece = Segment(last_piece.s_move_x, last_piece.s_move_y, segment_size, self.my_canvas, last_piece.cur_dir, self.my_canvas.coords(last_piece.seg))
+        new_piece = Segment(last_piece.s_move_x, last_piece.s_move_y, segment_size, self.my_canvas, last_piece.cur_dir, self.my_canvas.coords(last_piece.seg), rot_dir=last_piece.rot_dir, rot_pos=last_piece.rot_pos)
         self.body.append(new_piece)
         return new_piece
     def rotate_snake(self, new_dir:str, prev_dir:str, piece:Segment):
@@ -188,6 +180,7 @@ class GUI:
                 piece.canvas.coords(piece.seg,body_coords)
 
     def key_press(self,e:tkinter.Event):
+        cur_pos = self.head.canvas.coords(self.head.seg)
         key_pressed = str(e.char)
         new_dir = ""
         if key_pressed == 'w' or e.keysym=="Up":
@@ -199,19 +192,13 @@ class GUI:
         elif key_pressed == 'd' or e.keysym=="Right":
             new_dir = 'Right'
 
-        counter = 1
-        for piece in self.body:
-            prev_direction = direction[(piece.s_move_x,piece.s_move_y)]
-            if prev_direction == new_dir or prev_direction == axis_opposite[new_dir]:
-                continue
-            if counter == 1:
-                self.rotate_snake(new_dir, prev_direction, piece)
-                movement = direction_from_movement(new_dir)
-                piece.s_move_x = movement[0]
-                piece.s_move_y = movement[1]
-                piece.rotating = True
-                piece.cur_dir = new_dir
-            counter += 1
+        prev_direction = direction[(self.head.s_move_x,self.head.s_move_y)]
+        if prev_direction == new_dir or prev_direction == axis_opposite[new_dir]:
+            return
+        else:
+            for piece in self.body:
+                piece.rot_pos.append(cur_pos)
+                piece.rot_dir.append(new_dir)
 
     def start(self):
         self.root.bind("<Key>", self.key_press)
