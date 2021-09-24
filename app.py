@@ -16,7 +16,7 @@ from snake import *
 segment_size = 5
 food_size = 5
 speed = 10
-movement_freq = 200
+movement_freq = 300
 direction = {
     (-speed,0): 'Left',
     (speed,0): 'Right',
@@ -60,6 +60,7 @@ class GUI:
     def generate_food(self):
         s_min_max = [[1000,0], [800, 0]] # [[x_min, x_max], [y_min, y_max]]
         f_loc = []
+        # finding the max and minx for x and y from the existing snake
         for seg in self.body:
             s_loc = seg.canvas.coords(seg.seg)
             x0 = s_loc[0]
@@ -71,48 +72,45 @@ class GUI:
             s_min_max[1][0] = y0 if y0 < s_min_max[1][0] else s_min_max[1][0]
             s_min_max[1][1] = y1 if y1 > s_min_max[1][1] else s_min_max[1][1]
 
-        # pick 
-            #1 - NE
-            #2 - NW
-            #3 - SE
-            #4 - SW
-        dir = random.randint(1,4)
+        dir = random.choice(['NE', 'NW', 'SE', 'SW'])
         x = -1
         y = -1
-        if dir == 1:
+        if dir == 'NE':
             while x%5 !=0:
                 x = random.randint(2*food_size, s_min_max[0][0]) -food_size
             while y%5 !=0:
                 y = random.randint(2*food_size, s_min_max[1][0]) -food_size
             f_loc = [x,y,x+food_size,y+food_size]
             self.my_canvas.coords(self.food,f_loc)
-        elif dir == 2:
+        elif dir == 'NW':
             while x%5 !=0:
                 x = random.randint(s_min_max[0][1] + food_size, 1000-2*food_size)
             while y%5 !=0:
                 y = random.randint(2*food_size, s_min_max[1][0]) - food_size
             f_loc = [x,y,x+food_size,y+food_size]
             self.my_canvas.coords(self.food,f_loc)
-        elif dir == 3:
+        elif dir == 'SE':
             while x%5 !=0:
                 x = random.randint(2*food_size, s_min_max[0][0]) - food_size
             while y%5 !=0:
                 y = random.randint(s_min_max[1][1] + food_size, 800-2*food_size)
             f_loc = [x,y,x+food_size,y+food_size]
             self.my_canvas.coords(self.food,f_loc)
-        elif dir == 4:
+        elif dir == 'SW':
             while x%5 !=0:
                 x = random.randint(s_min_max[0][1] + food_size, 1000-2*food_size)
             while y%5 !=0:
                 y = random.randint(s_min_max[1][1] + food_size, 800-2*food_size)
             f_loc = [x,y,x+food_size,y+food_size]
             self.my_canvas.coords(self.food,f_loc)
-        return
+        print(self.my_canvas.coords(self.food))
     def same_pos(self, pos1:List[float], pos2:List[float]):
         for i in range(4):
             if pos1[i] != pos2[i]:
                 return False
         return True
+    def self_collision(self):
+        return
     def move_snake(self):
         
         if self.touching_border():
@@ -120,19 +118,25 @@ class GUI:
         else:
             for seg in self.body:
                 cur_pos = seg.canvas.coords(seg.seg) 
-                if len(seg.rot_pos) > 0 and self.same_pos(cur_pos,seg.rot_pos[0]):
-                    self.rotate_snake(seg.rot_dir[0],seg.cur_dir, seg)
-                    seg.cur_dir = seg.rot_dir[0]
-                    seg.rot_pos.pop(0)
-                    seg.rot_dir.pop(0)
+                
+                if len(seg.rot_dir) > 0:
+                    if (len(seg.rot_dir) > len(self.head.rot_pos) or seg==self.head) and self.same_pos(cur_pos,seg.rot_pos[0]):
+                        self.rotate_snake(seg.rot_dir[0],seg.cur_dir, seg)
+                        seg.cur_dir = seg.rot_dir[0]
+                        seg.rot_pos.pop(0)
+                        seg.rot_dir.pop(0)
 
                 seg.canvas.move(seg.seg, seg.s_move_x, seg.s_move_y)
+
+                #Check to see if snake head is touching food
                 if seg == self.head:
                     head_loc = self.my_canvas.coords(self.head.seg)
                     food_loc = self.my_canvas.coords(self.food)
                     if (head_loc[0]==food_loc[0] and head_loc[1] == food_loc[1]) or (head_loc[2]==food_loc[2] and head_loc[3]==food_loc[3]):
                         self.grow_snake(self.body[len(self.body)-1])
                         self.generate_food()
+
+
                 cur_xy = direction_from_movement(seg.cur_dir)
                 seg.s_move_x = cur_xy[0]
                 seg.s_move_y = cur_xy[1]
@@ -140,7 +144,7 @@ class GUI:
 
     def grow_snake(self,seg:Segment):
         last_piece = self.body[len(self.body)-1]
-        new_piece = Segment(last_piece.s_move_x, last_piece.s_move_y, segment_size, self.my_canvas, last_piece.cur_dir, self.my_canvas.coords(last_piece.seg), rot_dir=last_piece.rot_dir, rot_pos=last_piece.rot_pos)
+        new_piece = Segment(last_piece.s_move_x, last_piece.s_move_y, segment_size, self.my_canvas, last_piece.cur_dir, self.my_canvas.coords(last_piece.seg),last_piece.rot_pos, last_piece.rot_dir)
         self.body.append(new_piece)
         return new_piece
     def rotate_snake(self, new_dir:str, prev_dir:str, piece:Segment):
@@ -196,9 +200,8 @@ class GUI:
         if prev_direction == new_dir or prev_direction == axis_opposite[new_dir]:
             return
         else:
-            for piece in self.body:
-                piece.rot_pos.append(cur_pos)
-                piece.rot_dir.append(new_dir)
+            for piece in self.body: 
+                piece.add_rot(cur_pos,new_dir)
 
     def start(self):
         self.root.bind("<Key>", self.key_press)
