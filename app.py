@@ -103,17 +103,35 @@ class GUI:
                 y = random.randint(s_min_max[1][1] + food_size, 800-2*food_size)
             f_loc = [x,y,x+food_size,y+food_size]
             self.my_canvas.coords(self.food,f_loc)
-        print(self.my_canvas.coords(self.food))
     def same_pos(self, pos1:List[float], pos2:List[float]):
         for i in range(4):
             if pos1[i] != pos2[i]:
                 return False
         return True
     def self_collision(self):
-        return
+        for seg in self.body:
+            if seg == self.head: continue
+            head_pos = self.my_canvas.coords(self.head.seg)
+            seg_pos = self.my_canvas.coords(seg.seg)
+            # if self.same_pos(head_pos, seg_pos ):
+            #     return True
+            head_pos = [max(head_pos[0], head_pos[2]), max(head_pos[1], head_pos[3]), min(head_pos[0], head_pos[2]), min(head_pos[1], head_pos[3])]
+            seg_pos = [max(seg_pos[0], seg_pos[2]), max(seg_pos[1], seg_pos[3]), min(seg_pos[0], seg_pos[2]), min(seg_pos[1], seg_pos[3])]
+            if head_pos[1] > seg_pos[3] and head_pos[3] < seg_pos[3] and head_pos[0] <= seg_pos[0] and head_pos[2] >= seg_pos[2]:
+                return True
+            elif head_pos[1] > seg_pos[1] and head_pos[3] < seg_pos[1] and head_pos[0] <= seg_pos[0] and head_pos[2] >= seg_pos[2]:
+                return True
+            elif head_pos[0] > seg_pos[2] and head_pos[2] < seg_pos[2] and head_pos[1] <= seg_pos[1] and head_pos[3] >= seg_pos[3]:
+                return True
+            elif head_pos[0] > seg_pos[0] and head_pos[2] < seg_pos[0] and head_pos[1] <= seg_pos[1] and head_pos[3] >= seg_pos[3]:
+                return True
+            
+        return False
     def move_snake(self):
         
         if self.touching_border():
+            self.end_game()
+        elif self.self_collision():
             self.end_game()
         else:
             for seg in self.body:
