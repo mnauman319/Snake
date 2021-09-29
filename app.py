@@ -10,13 +10,17 @@
 
 import tkinter
 import random
-from typing import List, Tuple
+from typing import List
 from snake import *
 
+#global helpful variables
 segment_size = 5
 food_size = 5
 speed = 10
-movement_freq = 300
+movement_freq = 200
+moving = None
+
+#helpful dictionaries
 direction = {
     (-speed,0): 'Left',
     (speed,0): 'Right',
@@ -34,6 +38,7 @@ def direction_from_movement(value:str):
     keys = list(direction.keys())
     values = list(direction.values())
     return keys[values.index(value)]
+
 class GUI:
     def __init__ (self, root:tkinter):
         
@@ -46,17 +51,47 @@ class GUI:
         self.body = List[Segment]
         self.body = [self.head]
         self.food = self.my_canvas.create_rectangle(400,200,400+food_size, 200-food_size, fill='white')
-        self.recently_eaten = 0
 
+    def restart_game(self, e:tkinter.Event):
+        if(e.x>240 and e.x<760 and e.y>260 and e.y<340):
+            if str(e.type) == 'ButtonPress':
+                # cleanup the existing widgets 
+                self.root.after_cancel(moving)
+                for w in range(self.body[-1].seg+2):
+                    self.my_canvas.delete(w)
+                self.body = []
+                self.root.unbind("<Button-1>")
+                self.root.unbind("<Motion>")
+                self.my_canvas.config(cursor="")
+
+                # reset the GUI and starting state
+                self.food = self.my_canvas.create_rectangle(400,200,400+food_size, 200-food_size, fill='white')
+                self.head = Segment(speed,0, segment_size, self.my_canvas)
+                self.body.append(self.head)
+                a = self.grow_snake(self.head)
+                b = self.grow_snake(a)
+                self.grow_snake(b)
+                self.start()
+            else:
+                self.my_canvas.config(cursor='hand2')
+        else:
+            self.my_canvas.config(cursor='')
+        return "Break"
+    
     def end_game(self):
-        print('game over')
+        self.my_canvas.create_text(500,300,text="Game Over", fill="white", font="Times 80 bold")
+        self.root.bind("<Button-1>", self.restart_game)
+        self.root.bind("<Motion>", self.restart_game)
+        self.my_canvas.cursor = "hand1"
+    
     def touching_border(self):
         location = self.head.canvas.coords(self.head.seg)
         touching_left = location[0]+self.head.s_move_x<=0
         touching_right = location[0]+self.head.s_move_x>=1000
-        touching_top = location[1]+self.head.s_move_y<=0 
+        touching_top = location[1]+self.head.s_move_y<=-5 
         touching_bottom = location[1]+self.head.s_move_y>=800
         return touching_left or touching_right or touching_bottom or touching_top
+    
     def generate_food(self):
         s_min_max = [[1000,0], [800, 0]] # [[x_min, x_max], [y_min, y_max]]
         f_loc = []
@@ -103,11 +138,13 @@ class GUI:
                 y = random.randint(s_min_max[1][1] + food_size, 800-2*food_size)
             f_loc = [x,y,x+food_size,y+food_size]
             self.my_canvas.coords(self.food,f_loc)
+    
     def same_pos(self, pos1:List[float], pos2:List[float]):
         for i in range(4):
             if pos1[i] != pos2[i]:
                 return False
         return True
+    
     def self_collision(self):
         for seg in self.body:
             if seg == self.head: continue
@@ -127,6 +164,7 @@ class GUI:
                 return True
             
         return False
+    
     def move_snake(self):
         
         if self.touching_border():
@@ -159,12 +197,13 @@ class GUI:
                 seg.s_move_x = cur_xy[0]
                 seg.s_move_y = cur_xy[1]
             self.root.after(movement_freq,self.move_snake)
-
+    
     def grow_snake(self,seg:Segment):
         last_piece = self.body[len(self.body)-1]
         new_piece = Segment(last_piece.s_move_x, last_piece.s_move_y, segment_size, self.my_canvas, last_piece.cur_dir, self.my_canvas.coords(last_piece.seg),last_piece.rot_pos, last_piece.rot_dir)
         self.body.append(new_piece)
         return new_piece
+    
     def rotate_snake(self, new_dir:str, prev_dir:str, piece:Segment):
         piece.cur_dir = new_dir
         body_coords = piece.canvas.coords(piece.seg)
@@ -200,7 +239,7 @@ class GUI:
             elif prev_dir == 'Down':
                 body_coords = [cur_x0, cur_y0, cur_x0+2*segment_size, cur_y0+segment_size]
                 piece.canvas.coords(piece.seg,body_coords)
-
+    
     def key_press(self,e:tkinter.Event):
         cur_pos = self.head.canvas.coords(self.head.seg)
         key_pressed = str(e.char)
@@ -220,18 +259,21 @@ class GUI:
         else:
             for piece in self.body: 
                 piece.add_rot(cur_pos,new_dir)
-
+    
     def start(self):
+        
+        # a = GUI.grow_snake(GUI.head)
+        # b = GUI.grow_snake(a)
+        # GUI.grow_snake(b)
         self.root.bind("<Key>", self.key_press)
-        self.root.after(movement_freq, self.move_snake)
+        global moving
+        moving = self.root.after(movement_freq, self.move_snake)
         self.root.mainloop()
 
+# initialize GUI
 my_GUI = GUI(Tk())
 a = my_GUI.grow_snake(my_GUI.head)
 b = my_GUI.grow_snake(a)
 my_GUI.grow_snake(b)
 my_GUI.start()
-
-
-
 
